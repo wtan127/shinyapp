@@ -1,0 +1,66 @@
+Shiny App for Asset Allocation
+========================================================
+author: WTAN
+date: March 27, 2016
+autosize: true
+
+Intro
+========================================================
+
+For the Shiny assignment, I have loaded some asset allocation data to compare different returns for percentage splits between Equities and Fixed Income.
+
+- Equities and Fixed Income are the two largest single currency asset classes in markets.
+- In the United States, many asset managers use a 60/40 approach, allocating 60% of assets in fixed income products, and 40% in equities.
+- The fixed income benchmark is often the Barclays Aggregate Index
+- The equities benchmark is often the S&P 500.
+
+
+
+Data Processing
+========================================================
+
+The data I used was collected from Bloomberg and indexed to the first trading day of January 2000. The returns are "total return," meaning that they include coupons, dividends, and rolldown.
+
+We do this because asset prices are usually listed outright, and when there are higher coupons or dividends, they can greatly affect the total return, which would not be reported in the change in price (unless you are looking at futures).
+
+Also if we are looking at shorter maturity products or products on a steep curve, the rolldown can cause significant profits or losses, especially over time. One example is the negative cost to store physical commodities such as oil.
+
+Data
+========================================================
+
+```{r echo=FALSE}
+library(shiny)
+library(dplyr)
+library(ggplot2)
+##Data processing
+aggspx <- read.csv("./shinyapp/aggspx.csv")
+agg <- aggspx[ ,1:2]
+spx <- aggspx[ ,3:4]
+agg$Agg_Date <- as.Date(agg$Agg_Date, "%m/%d/%Y")
+spx$SPX_Date <- as.Date(spx$SPX_Date, "%m/%d/%Y")
+alldates <- merge(agg, spx, by.x="Agg_Date", by.y="SPX_Date")
+agganchor <- alldates$Agg[1]
+alldates$aggreturn <- (alldates$Agg - agganchor)/agganchor
+spxanchor <- alldates$SPX[1]
+alldates$spxreturn <- (alldates$SPX - spxanchor)/spxanchor
+```
+
+```{r, echo=TRUE}
+plot(alldates$Agg_Date, alldates$aggreturn, col="red", type="l", 
+     main="Returns", xlab="Date", ylab="Returns as of Jan 2000")
+lines(alldates$Agg_Date, alldates$spxreturn, col="green")
+```
+
+
+Results
+========================================================
+
+https://wtan.shinyapps.io/shinyapp/
+https://wtan.shinyapps.io/shinyapp2/
+If these are disconnected from the server, please refer to the PNG files in the repository.
+
+As we can see from the the graphs, the returns of fixed income outstrip that of equities. This is mainly because of the 30-year bull market in fixed income as yields have become compressed.
+
+Note that these returns are using a buy and hold method. Certainly, such as the years such as the ones following the subprime crisis, the returns in equities outstripped that of fixed income.
+
+But overall, it is clear the fixed income was the more stable instrument in the past 15 years net of carry and rolldown.
